@@ -19,7 +19,7 @@ async function go(e){e&&e.preventDefault();const a=$('#from').value.trim(),b=$('
  const r=await (await fetch(`https://router.project-osrm.org/route/v1/driving/${A[1]},${A[0]};${B[1]},${B[0]}?overview=full&geometries=geojson`)).json();
  if(!r.routes||!r.routes.length)throw new Error('No driving route found');
  const rt=r.routes[0];routeCoords=rt.geometry.coordinates.map(c=>[c[1],c[0]]);cum=[0];for(let i=1;i<routeCoords.length;i++)cum.push(cum[i-1]+hav(routeCoords[i-1],routeCoords[i]));
- if(routeLine)map.removeLayer(routeLine);routeLine=L.polyline(routeCoords,{color:'#3b82f6',weight:5,opacity:.9}).addTo(map);map.fitBounds(routeLine.getBounds(),{padding:[30,30]});
+ if(routeLine)map.removeLayer(routeLine);routeLine=L.polyline(routeCoords,{color:'#3b82f6',weight:5,opacity:.9}).addTo(map);map.fitBounds(routeLine.getBounds(),{padding:[30,30]});if(typeof watchId!=='undefined'&&watchId!==null){follow=false;rc.style.display='block'}
  $('#sum').innerHTML=`<b>${(rt.distance/1609.34).toFixed(0)} mi</b> · ${Math.floor(rt.duration/3600)}h ${Math.round(rt.duration%3600/60)}m`;
  status('Loading chargers…');
  const wkt='LINESTRING('+simplify(routeCoords,180).map(c=>c[1].toFixed(4)+' '+c[0].toFixed(4)).join(', ')+')';
