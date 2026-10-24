@@ -28,9 +28,17 @@ async function go(e){e&&e.preventDefault();const a=$('#from').value.trim(),b=$('
  const res=await fetch('https://developer.nlr.gov/api/alt-fuel-stations/v1/nearby-route.json?api_key='+KEY(),{method:'POST',body});
  const j=await res.json();if(!res.ok)throw new Error((j.error&&j.error.message)||('Charger API error '+res.status)+(KEY()==='DEMO_KEY'?' — the shared DEMO_KEY allows ~10 searches/hour; add your free key in ⚙':''));
  ST=(j.fuel_stations||[]).filter(usable).map(s=>({...s,_t:isTesla(s),_kw:maxKw(s),_mi:milesAlong(s.latitude,s.longitude)})).sort((x,y)=>x._mi-y._mi);
+ await classify(ST);
  render();status('');}catch(err){status('⚠ '+err.message,1)}}
+let SCI=null;
+async function scinfo(){if(SCI)return SCI;try{const r=await fetch('https://supercharge.info/service/supercharge/allSites');SCI=(await r.json()).filter(x=>x.gps&&x.status!=='CLOSED_PERM'&&x.status!=='PLAN')}catch(e){SCI=[]}return SCI}
+async function classify(list){const need=[];for(const s of list){if(!s._t)continue;const a=s.access_days_time||'';
+ if(/NACS partner/i.test(a)){s._open='yes';s._src='AFDC: NACS partner enabled'}else if(/Teslas only/i.test(a)){s._open='no';s._src='AFDC: Open to Teslas only'}else need.push(s)}
+ if(need.length){const sc=await scinfo();for(const s of need){let b=null,bd=1e9;for(const x of sc){const d=hav([s.latitude,s.longitude],[x.gps.latitude,x.gps.longitude]);if(d<bd){bd=d;b=x}}
+  if(b&&bd<0.25){s._open=b.otherEVs?'yes':'no';s._src='supercharge.info: '+(b.otherEVs?'open to other EVs':'Tesla only')}else{s._open='unknown';s._src='No data on non-Tesla access'}}}}
+const shown=s=>!s._t||s._open==='yes'||showTO;let showTO=localStorage.evShowTO==='1';
 function status(t,err){const el=$('#status');el.textContent=t;el.className=err?'err':'';el.style.display=t?'block':'none'}
-function vis(){return ST.filter(s=>mode==='all'||(mode==='tesla'?s._t:!s._t));}
+function vis(){return ST.filter(shown).filter(s=>mode==='all'||(mode==='tesla'?s._t:!s._t));}
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function popup(s){return `<div class="pp"><div class="pt">${esc(s.station_name)}</div>
 <div class="pa">${esc(s.street_address)}, ${esc(s.city)}, ${esc(s.state)} ${esc(s.zip)}</div>
@@ -38,12 +46,12 @@ function popup(s){return `<div class="pp"><div class="pt">${esc(s.station_name)}
 <table class="pk"><tr><td>Max power</td><td>${s._kw?s._kw+' kW':'n/a'}</td></tr><tr><td>Connectors</td><td>${esc(conns(s))}</td></tr>
 <tr><td>Total stalls</td><td><b>${s.ev_dc_fast_num||'?'}</b></td></tr><tr><td>Open now</td><td class="na">Live slot count unavailable — no free real-time feed. Total stalls shown.</td></tr>
 <tr><td>Along route</td><td>mile ${s._mi.toFixed(0)}</td></tr><tr><td>Hours</td><td>${esc(s.access_days_time||'')}</td></tr></table>
-${s._t?'<div class="note">Ford (NACS adapter): use V3/V4 stalls marked “open to non-Teslas” in the Tesla app.</div>':''}
+${s._t?(s._open==='yes'?'<div class="note">✅ Open to non-Teslas ('+esc(s._src)+'). Ford: use your NACS adapter; pay in the Tesla or FordPass app.</div>':'<div class="note" style="color:#fbbf24">⛔ '+(s._open==='no'?'Tesla-only site':'Non-Tesla access unconfirmed')+' ('+esc(s._src)+') — your truck likely can’t charge here.</div>'):''}
 <a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${s.latitude},${s.longitude}">Navigate ↗</a></div>`}
 function render(){layer.clearLayers();const v=vis();
- for(const s of v){const m=L.circleMarker([s.latitude,s.longitude],{radius:8,color:'#fff',weight:1.5,fillColor:s._t?'#e31937':'#22c55e',fillOpacity:.95}).bindPopup(popup(s),{maxWidth:300});m.addTo(layer);s._m=m;}
- const t=ST.filter(s=>s._t).length;$('#cnt').innerHTML=`<span class="dot t"></span>Tesla ${t} · <span class="dot n"></span>Other ${ST.length-t}`;
- $('#tb').innerHTML=v.map((s,i)=>`<tr data-i="${ST.indexOf(s)}"><td data-v="${s._mi}">${s._mi.toFixed(0)}</td><td>${esc(s.station_name)}</td><td>${esc(s.city)}, ${esc(s.state)}</td><td><span class="dot ${s._t?'t':'n'}"></span>${esc(s.ev_network)}</td><td data-v="${s._kw||0}">${s._kw||''}</td><td>${esc(conns(s))}</td><td data-v="${s.ev_dc_fast_num||0}">${s.ev_dc_fast_num||''}</td></tr>`).join('')||'<tr><td colspan=7>No chargers</td></tr>';
+ for(const s of v){const m=L.circleMarker([s.latitude,s.longitude],{radius:8,color:'#fff',weight:1.5,fillColor:s._t?(s._open==='yes'?'#e31937':'#6b7280'):'#22c55e',fillOpacity:.95}).bindPopup(popup(s),{maxWidth:300});m.addTo(layer);s._m=m;}
+ const t=ST.filter(s=>s._t&&s._open==='yes').length,tx=ST.filter(s=>s._t&&s._open!=='yes').length,o=ST.filter(s=>!s._t).length;$('#cnt').innerHTML=`<span class="dot t"></span>Tesla (Ford OK) ${t} · <span class="dot n"></span>Other ${o}`+(tx?` · <span class="dot" style="background:#6b7280"></span>${tx} Tesla-only ${showTO?'shown':'hidden'}`:'');
+ $('#tb').innerHTML=v.map((s,i)=>`<tr data-i="${ST.indexOf(s)}"><td data-v="${s._mi}">${s._mi.toFixed(0)}</td><td>${esc(s.station_name)}</td><td>${esc(s.city)}, ${esc(s.state)}</td><td><span class="dot ${s._t?'t':'n'}" style="${s._t&&s._open!=='yes'?'background:#6b7280':''}"></span>${esc(s.ev_network)}</td><td data-v="${s._kw||0}">${s._kw||''}</td><td>${esc(conns(s))}</td><td data-v="${s.ev_dc_fast_num||0}">${s.ev_dc_fast_num||''}</td></tr>`).join('')||'<tr><td colspan=7>No chargers</td></tr>';
  document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b.dataset.m===mode));}
 $('#tb').addEventListener('click',e=>{const tr=e.target.closest('tr[data-i]');if(!tr)return;const s=ST[tr.dataset.i];map.setView([s.latitude,s.longitude],13);s._m&&s._m.openPopup();window.scrollTo({top:0,behavior:'smooth'})});
 document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{mode=localStorage.evMode=b.dataset.m;render()});
@@ -73,3 +81,4 @@ function track(){if(!navigator.geolocation||watchId!==null)return;let first=true
   window.__lastPos=ll;if(follow)first?(map.setView(ll,15),first=false):map.panTo(ll,{animate:true});},
   e=>status('⚠ Location: '+e.message,1),{enableHighAccuracy:true,maximumAge:2000,timeout:20000});keepAwake();}
 track();
+$('#showto').checked=showTO;$('#showto').onchange=e=>{showTO=e.target.checked;localStorage.evShowTO=showTO?'1':'0';render()};
