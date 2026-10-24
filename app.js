@@ -55,7 +55,7 @@ document.querySelectorAll('#tbl th').forEach(th=>{const h=document.createElement
   const mv=ev=>{th.style.width=Math.max(40,w+ev.clientX-x)+'px'},up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up)};addEventListener('pointermove',mv);addEventListener('pointerup',up)})});
 render();
 
-$('#loc').onclick=()=>{if(!navigator.geolocation)return status('Location not supported',1);status('Getting your location…');
+$('#loc').onclick=()=>{if(!navigator.geolocation)return status('Location not supported',1);if(window.__lastPos){$('#from').value=__lastPos[0].toFixed(5)+','+__lastPos[1].toFixed(5);return status('')}status('Getting your location…');
 navigator.geolocation.getCurrentPosition(p=>{$('#from').value=p.coords.latitude.toFixed(5)+','+p.coords.longitude.toFixed(5);status('')},e=>status('⚠ Location: '+e.message,1),{enableHighAccuracy:true,timeout:15000});};
 /* live tracking */
 let me=null,acc=null,follow=true,watchId=null,wake=null,lastHd=0;
