@@ -56,3 +56,19 @@ render();
 
 $('#loc').onclick=()=>{if(!navigator.geolocation)return status('Location not supported',1);status('Getting your location…');
 navigator.geolocation.getCurrentPosition(p=>{$('#from').value=p.coords.latitude.toFixed(5)+','+p.coords.longitude.toFixed(5);status('')},e=>status('⚠ Location: '+e.message,1),{enableHighAccuracy:true,timeout:15000});};
+/* live tracking */
+let me=null,acc=null,follow=true,watchId=null,wake=null,lastHd=0;
+const meIcon=hd=>L.divIcon({className:'',iconSize:[26,26],iconAnchor:[13,13],html:`<div class="me"><div class="hd" style="transform:rotate(${hd}deg)"></div><div class="md"></div></div>`});
+const rc=document.createElement('button');rc.id='recenter';rc.textContent='◎ Recenter';rc.style.display='none';document.getElementById('map').appendChild(rc);
+L.DomEvent.disableClickPropagation(rc);
+rc.onclick=()=>{follow=true;rc.style.display='none';if(me)map.setView(me.getLatLng(),Math.max(map.getZoom(),15))};
+map.on('dragstart',()=>{if(watchId!==null){follow=false;rc.style.display='block'}});
+async function keepAwake(){try{if('wakeLock' in navigator&&!wake){wake=await navigator.wakeLock.request('screen');wake.addEventListener('release',()=>wake=null)}}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&watchId!==null)keepAwake()});
+function track(){if(!navigator.geolocation||watchId!==null)return;let first=true;
+ watchId=navigator.geolocation.watchPosition(p=>{const ll=[p.coords.latitude,p.coords.longitude];if(p.coords.heading!=null&&!isNaN(p.coords.heading))lastHd=p.coords.heading;
+  if(!me){me=L.marker(ll,{icon:meIcon(lastHd),zIndexOffset:1000}).addTo(map);acc=L.circle(ll,{radius:p.coords.accuracy,color:'#3b82f6',weight:1,fillOpacity:.12}).addTo(map)}
+  else{me.setLatLng(ll);me.setIcon(meIcon(lastHd));acc.setLatLng(ll).setRadius(p.coords.accuracy)}
+  window.__lastPos=ll;if(follow)first?(map.setView(ll,15),first=false):map.panTo(ll,{animate:true});},
+  e=>status('⚠ Location: '+e.message,1),{enableHighAccuracy:true,maximumAge:2000,timeout:20000});keepAwake();}
+track();
