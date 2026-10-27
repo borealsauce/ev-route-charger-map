@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex">
-<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0b0f17"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="EV Map"><link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0b0f17"><link rel="apple-touch-icon" sizes="180x180" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="EV Route"><link rel="icon" href="icon-192.png">
 <title>EV Route Charger Map</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 *{box-sizing:border-box}body{margin:0;background:#0b0f17;color:#e5e7eb;font:14px -apple-system,Segoe UI,Roboto,sans-serif}
@@ -29,6 +29,7 @@ header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#11
 .me{position:relative;width:26px;height:26px}.md{position:absolute;left:6px;top:6px;width:14px;height:14px;border-radius:50%;background:#3b82f6;border:3px solid #fff;box-shadow:0 0 8px #3b82f6}.hd{position:absolute;inset:0}.hd:before{content:"";position:absolute;left:8px;top:-9px;border:5px solid transparent;border-bottom:11px solid #60a5fa}
 .foot{color:#6b7280;font-size:12px;padding:0 14px 20px}
 @media(max-width:600px){#map{height:55vh}header h1{font-size:15px}}
+html,body{overscroll-behavior:none}header,#f,.bar,#status,.wrap,.foot{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}.foot{padding-bottom:max(20px,env(safe-area-inset-bottom))}#recenter{right:max(12px,env(safe-area-inset-right));bottom:calc(96px + env(safe-area-inset-bottom))}@media(display-mode:standalone){#map{height:calc(58vh - env(safe-area-inset-top))}}
 </style></head><body>
 <header><h1>⚡ EV Route Charger Map <span style="color:#6b7280;font-weight:400;font-size:13px">F-150 Lightning · CCS + Tesla (NACS)</span></h1><button id="gear" title="API key">⚙</button></header>
 <form id="f"><input id="from" placeholder="Start (e.g. Carlsbad, CA)" value="Carlsbad, CA"><button type="button" id="loc" title="Use my location">📍</button><button type="button" id="swap">⇅</button><input id="to" placeholder="Destination" value="Las Vegas, NV">
@@ -39,7 +40,7 @@ header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#11
 <div class="foot">Chargers: U.S. DOE AFDC (DC fast, public, open). Routing: OSRM · Geocoding: Nominatim. Live open-slot counts aren't published by Tesla or AFDC for free, so total stalls are shown — check the Tesla / FordPass app for live availability.</div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="app.js"></script>
-<script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");</script><!--SORTABLE-START--><script>
+<script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{scope:"./"});</script><!--SORTABLE-START--><script>
 /* Shared sortable tables (Grok Bot trackers). Click any header: asc/desc toggle with ▲/▼.
    Works on dynamically rendered tables via event delegation. Totals (tfoot, .total/.ft/.tot rows,
    or first cell TOTAL/ALL-TIME/GRAND) stay pinned at bottom. Group-label rows (fewer cells / colspan)

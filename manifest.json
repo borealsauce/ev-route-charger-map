@@ -1,6 +1,8 @@
 {
  "name": "EV Route Charger Map",
- "short_name": "EV Map",
+ "id": "./",
+ "short_name": "EV Route",
+ "description": "F-150 Lightning route planner with CCS + Tesla chargers",
  "start_url": "./",
  "scope": "./",
  "display": "standalone",
@@ -11,13 +13,31 @@
    "src": "icon-192.png",
    "sizes": "192x192",
    "type": "image/png",
-   "purpose": "any maskable"
+   "purpose": "any"
   },
   {
    "src": "icon-512.png",
    "sizes": "512x512",
    "type": "image/png",
-   "purpose": "any maskable"
+   "purpose": "any"
+  },
+  {
+   "src": "icon-maskable-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "maskable"
+  },
+  {
+   "src": "icon-maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  },
+  {
+   "src": "icon-180.png",
+   "sizes": "180x180",
+   "type": "image/png",
+   "purpose": "any"
   }
  ]
 }
