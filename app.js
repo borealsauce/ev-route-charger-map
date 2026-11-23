@@ -2,7 +2,7 @@ const $=s=>document.querySelector(s);
 const map=L.map('map',{zoomControl:false}).setView([36.5,-117],6);
 window.__map=map;
 L.control.zoom({position:'bottomright'}).addTo(map);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:19}).addTo(map);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:19}).addTo(map);
 let routeLine=null,layer=L.layerGroup().addTo(map),ST=[],routeCoords=[],mode=localStorage.evMode||'all';
 const KEY=()=>localStorage.nrelKey||'DEMO_KEY';
 const isTesla=s=>/tesla/i.test(s.ev_network||'');
